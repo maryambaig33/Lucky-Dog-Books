@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigation } from './components/Navigation';
 import { Hero } from './components/Hero';
 import { Footer } from './components/Footer';
@@ -10,6 +10,11 @@ import { PageView } from './types';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<PageView>(PageView.HOME);
+
+  // Scroll to top whenever the view changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentView]);
 
   const renderContent = () => {
     switch (currentView) {

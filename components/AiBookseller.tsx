@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { getBookRecommendations } from '../services/geminiService';
 import { BookRecommendation } from '../types';
-import { Sparkles, Search, Loader2, Book, ArrowRight } from 'lucide-react';
+import { Sparkles, Search, Loader2, Book, ArrowRight, AlertCircle } from 'lucide-react';
 
 const SUGGESTED_PROMPTS = [
   "A cozy mystery set in London",
@@ -15,6 +15,7 @@ export const AiBookseller: React.FC = () => {
   const [recommendations, setRecommendations] = useState<BookRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState(false);
 
   const handleSearch = async (e?: React.FormEvent, overrideQuery?: string) => {
     if (e) e.preventDefault();
@@ -25,13 +26,19 @@ export const AiBookseller: React.FC = () => {
 
     setLoading(true);
     setHasSearched(true);
+    setError(false);
     setRecommendations([]); 
     
     try {
       const results = await getBookRecommendations(searchQuery);
-      setRecommendations(results);
+      if (results && results.length > 0) {
+        setRecommendations(results);
+      } else {
+        setError(true);
+      }
     } catch (err) {
       console.error(err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -93,6 +100,14 @@ export const AiBookseller: React.FC = () => {
         </div>
 
         <div className="space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-center text-red-800 flex flex-col items-center">
+              <AlertCircle className="h-8 w-8 mb-2 text-red-500" />
+              <p className="font-medium">Oops! Our digital bookseller is having a moment.</p>
+              <p className="text-sm mt-1">Please try again in a few seconds or try a different search.</p>
+            </div>
+          )}
+
           {recommendations.length > 0 && (
             <div className="grid gap-6 md:grid-cols-3">
               {recommendations.map((book, idx) => (
@@ -127,7 +142,7 @@ export const AiBookseller: React.FC = () => {
             </div>
           )}
 
-          {hasSearched && !loading && recommendations.length === 0 && (
+          {hasSearched && !loading && !error && recommendations.length === 0 && (
             <div className="text-center py-16 bg-white rounded-xl border border-stone-100 shadow-sm">
               <div className="inline-block p-4 bg-stone-100 rounded-full mb-4">
                 <Search className="h-8 w-8 text-stone-400" />

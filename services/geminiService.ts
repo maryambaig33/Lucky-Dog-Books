@@ -32,10 +32,21 @@ export const getBookRecommendations = async (userQuery: string): Promise<BookRec
     const jsonText = response.text;
     if (!jsonText) return [];
     
-    // Clean up potential markdown code blocks from the response
-    const cleanedText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
-    
-    return JSON.parse(cleanedText) as BookRecommendation[];
+    // Improved parsing logic to extract JSON array
+    try {
+      // First try direct parse
+      return JSON.parse(jsonText) as BookRecommendation[];
+    } catch (e) {
+      // If direct parse fails, try to find the array bounds
+      const firstBracket = jsonText.indexOf('[');
+      const lastBracket = jsonText.lastIndexOf(']');
+      
+      if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+        const cleanedText = jsonText.substring(firstBracket, lastBracket + 1);
+        return JSON.parse(cleanedText) as BookRecommendation[];
+      }
+      throw new Error("Could not parse JSON response");
+    }
   } catch (error) {
     console.error("Failed to get recommendations", error);
     return [];
