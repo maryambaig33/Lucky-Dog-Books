@@ -32,7 +32,10 @@ export const getBookRecommendations = async (userQuery: string): Promise<BookRec
     const jsonText = response.text;
     if (!jsonText) return [];
     
-    return JSON.parse(jsonText) as BookRecommendation[];
+    // Clean up potential markdown code blocks from the response
+    const cleanedText = jsonText.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    return JSON.parse(cleanedText) as BookRecommendation[];
   } catch (error) {
     console.error("Failed to get recommendations", error);
     return [];
